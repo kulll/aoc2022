@@ -38,7 +38,7 @@ def sum_files_current_dir(files):
     return result
 
 
-def sum_files_in_dir(data, placeholder):
+def sum_files_in_dir(data, placeholder, max_size=float("inf")):
 
     total_size = 0
 
@@ -46,7 +46,7 @@ def sum_files_in_dir(data, placeholder):
         dirs = data.get("dirs")
 
         for i in dirs:
-            size = sum_files_in_dir(dirs.get(i), placeholder)
+            size = sum_files_in_dir(dirs.get(i), placeholder, max_size)
             total_size += size
 
         size = sum_files_current_dir(data.get("files"))
@@ -56,7 +56,7 @@ def sum_files_in_dir(data, placeholder):
         files = data.get("files")
         total_size += sum_files_current_dir(files)
 
-    if total_size < 100000:
+    if total_size < max_size:
         placeholder.append(data)
 
     return total_size
@@ -67,12 +67,22 @@ def first(data):
     data = parse_data(data)
     current = data.get("/")
     placeholder = []
-    sum_files_in_dir(current, placeholder)
-    print(sum(sum_files_in_dir(i, []) for i in placeholder))
+    sum_files_in_dir(current, placeholder, 100000)
+    print(sum(sum_files_in_dir(i, [], 100000) for i in placeholder))
 
 
 def second(data):
-    pass
+    data = parse_data(data)
+    current = data.get("/")
+    placeholder = []
+    total_usage = sum_files_in_dir(current, placeholder)
+    total_diskspace = 70000000
+    minimum_required = 30000000
+    needed_space = minimum_required - (total_diskspace - total_usage)
+    result = min(
+        x for i in placeholder if (x := sum_files_in_dir(i, [])) > needed_space
+    )
+    print(result)
 
 
 if __name__ == "__main__":
